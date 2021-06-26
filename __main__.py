@@ -5,7 +5,7 @@ The main executable file to used in the processing of all files related to the
 maritime_decarbonisation repository.
 
 
-Databases used in the study include...
+Databases used in the study include..
 
         static vessel information           Ray et al (2017)
         dynamic vessel AIS dataset          Ray et al (2017)
@@ -78,6 +78,7 @@ def data_cleaning():
 
 
 
+
 def data_merging():
     """
     Run merging found in data_merging.py
@@ -93,6 +94,7 @@ def data_merging():
 
 
     return 0
+
 
 
 
