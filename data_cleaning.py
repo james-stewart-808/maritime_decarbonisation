@@ -3,61 +3,75 @@ data_cleaning.py
 
 Script to clean datasets. Steps in the cleaning process include...
 
-        1. Removing unnecessary fields.
-        2. Filtering for containerhips only.
-        3. Filtering for only navigation codes related to the mission - 0, 3, 4, 8.
-        4. Only entries with Speed over Ground greater than 5.
+        1.1     Removing unnecessary fields.
+        1.2     Filtering for containerhips only.
+        1.3     Filtering for only navigation codes related to the mission - 0, 3, 4, 8.
+        1.4     Only entries with Speed over Ground greater than 5.
 
 
 A full description of the research and references used can be found in README.md
-
-
-
-
-# __main__ execution function
-def data_cleaning():
-
-    Run cleaning processes found in data_cleaning.py
-
-    Input:
-
-
-
-    Output:
-
-
-
-
-
-    return 0
-
 """
 
-# static_df, dynamic_df = load_data()
 
-
-
-
-
-### DATA CLEANING 1 - REMOVE UNNECESSARY FIELDS ###
-static_df
-static_df_dropped = static_df.drop(['imonumber', 'callsign', 'shipname', 'eta', 'destination', 'mothershipmmsi', 't'], axis=1)
-rows_to_drop = np.zeros(len(static_df_dropped))
-mmsi_bank, type_bank = np.zeros(200000), np.zeros(200000)
-bank_counter = 0
-
-def remove_fields():
+def remove_fields(static_df):
     """
-    Removing unnecessary fields from the dataset to reduce computation.
+    1.1 Removing unnecessary fields from the static dataset to reduce computation
 
     Input:
 
+            static_df       static vessel dataset
+            dynamic_df      dynamic AIS vessel dataset
+
     Output:
+
+            static_df_rm    static vessel dataset with unused fields removed
 
     """
 
-    return 0
+    static_df_rm = static_df.drop(['imonumber', 'callsign', 'shipname', 'eta', 'destination', 'mothershipmmsi', 't'], axis=1)
 
+    return static_df_rm
+
+
+
+
+def containership_filter(static_df_rm):
+    """
+    1.2 Filter to leave containership vessels only.
+
+    Input:
+
+            static_df_rm    static vessel dataset with unused fields removed
+
+    Output:
+
+            df
+
+    """
+
+    mmsi_bank, type_bank = np.zeros(len(static_df_rm)), np.zeros(len(static_df_rm))
+    bank_counter = 0
+
+    # for loop to find containerships only
+    for ship_row in range(len(static_df_rm)):
+        # use try to account for invalid ship type entries
+        try:
+            # if ship type is a containership (type 7)
+            if str(int(static_df_rm["shiptype"][ship_row]))[0] == '7':
+
+                mmsi_bank[bank_counter] = static_df_rm["sourcemmsi"][ship_row]
+                type_bank[bank_counter] = int(static_df_rm["shiptype"][ship_row])
+
+                bank_counter += 1
+
+        except ValueError:
+            pass
+
+
+
+
+
+    return 0
 
 
 
@@ -65,26 +79,6 @@ def remove_fields():
 
 
 ### DATA CLEANING 2 - ONLY CONTAINERSHIPS ###
-
-# get banks of mmsi numbers and ship types
-for ship_row in range(len(static_df_dropped)):
-    try:
-        if str(int(static_df_dropped["shiptype"][ship_row]))[0] == '7':
-            mmsi_bank[bank_counter] = static_df_dropped["sourcemmsi"][ship_row]
-            type_bank[bank_counter] = int(static_df_dropped["shiptype"][ship_row])
-            bank_counter += 1
-    except ValueError:
-        pass
-
-
-# Find length of mmsi_bank & type_bank, 186295
-for index in range(200000):
-    if mmsi_bank[index] == 0:
-        print(index)
-        break
-
-
-
 
 ## Get Type Dataframe ##
 # create pandas dataframe of them, without duplicates, and get indexes
@@ -149,17 +143,6 @@ cleaned_dynamic_df = pd.read_csv('/Users/apple/Desktop/transport/Shipping/contai
 
 
 
-def containerships_only():
-    """
-    Filter to leave containership vessels only.
-
-    Input:
-
-    Output:
-
-    """
-
-    return 0
 
 
 
@@ -193,7 +176,7 @@ cleaned_data_navstat
 
 def navigation_codes():
     """
-    Filter for navigation codes of 0, 3, 4 and 8 only.
+    3. Filter for navigation codes of 0, 3, 4 and 8 only.
 
     Input:
 
@@ -213,14 +196,36 @@ final_dataset.to_csv("/Users/apple/Desktop/transport/Shipping/datasets/final_dat
 final_dataset
 
 
+
+
 def SOG_above_5():
     """
-    Filter for vessel speed over grounds of greater than 5.
+    4. Filter for vessel speed over grounds of greater than 5.
 
     Input:
 
     Output:
 
     """
+
+    return 0
+
+
+
+
+def data_cleaning():
+    """
+    Compilation function
+
+    Input:
+
+        xyz     from __main__.py
+
+    Output:
+
+        yzx     using functions above
+
+    """
+
 
     return 0

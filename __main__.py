@@ -34,13 +34,13 @@ import ETR_scenarios
 
 def load_data():
     """
-    Check terminal call usage and load dataset into pandas dataframe.
-
-    No inputs.
+    0. Check terminal call usage and load dataset into pandas dataframe using
+    arguments given from command line.
 
     Outputs:
 
-            df          pandas dataframe of stock price history.
+            static_df       static vessel dataset
+            dynamic_df      dynamic AIS vessel dataset
 
     """
 
@@ -62,7 +62,7 @@ def load_data():
 
 def data_cleaning():
     """
-    Run cleaning processes found in data_cleaning.py
+    1. Run cleaning processes found in data_cleaning.py
 
     Input:
 
@@ -81,7 +81,7 @@ def data_cleaning():
 
 def data_merging():
     """
-    Run merging found in data_merging.py
+    2. Run merging found in data_merging.py
 
     Input:
 
@@ -100,7 +100,7 @@ def data_merging():
 
 def ETR_scenarios():
     """
-    Train the extra trees regressor and generate scenarios based on climatic
+    3. Train the extra trees regressor and generate scenarios based on climatic
     forecasts (references in README.md). Code available in ETR_scenarios.py
 
     Input:
@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
 
     # data cleaning step
-    data_cleaning()
+    data_cleaning(static_df, dynamic_df)
 
 
     # data data_merging
