@@ -53,10 +53,10 @@ def load_data():
         dynamic_filename = sys.argv[2]
 
     # Read dataset into pandas dataframe and print head of dataframe
-    static_df = pd.read_csv(static_filename)
-    dynamic_df = pd.read_csv(dynamic_filename)
+    static_dataset = pd.read_csv(static_filename)
+    dynamic_dataset = pd.read_csv(dynamic_filename)
 
-    return static_df, dynamic_df
+    return static_dataset, dynamic_dataset
 
 
 
