@@ -170,6 +170,39 @@ def SOG_above_5(dynamic_navstat):
 
 
 
+def generate_sub_sample(dynamic_cleaned): # This should maybe be the first thing to do
+    """
+    1.6 Take a sample of N containerships.
+
+    Input:
+
+            dynamic_cleaned     fully cleaned dynamic dataset.
+
+    Output:
+
+            dynamic_sample      sample of dynamic dataset with 40 containerships.
+
+    """
+
+    # define sample size
+    N = 40
+
+    # get the chosen N containership mmsi numbers
+    dynamic_mmsi_numbers = dynamic_cleaned["sourcemmsi"].unique()[:N]
+
+    # sample the dataset for the N containerships
+    dynamic_sample = dynamic_cleaned[dynamic_cleaned["sourcemmsi"].isin(dynamic_mmsi_numbers)].reset_index().drop("index", axis=1)
+
+    # remove fields that won't be features into the model
+    dynamic_sample = dynamic_sample.drop(["navigationalstatus", "rateofturn", "trueheading"], axis=1)
+
+    # option to save
+    # dynamic_sample.to_csv("datasets/dynamic_sample.csv")
+
+    return dynamic_sample
+
+
+
 
 def data_cleaning(static_dataset, dynamic_dataset):
     """
@@ -195,7 +228,10 @@ def data_cleaning(static_dataset, dynamic_dataset):
     dynamic_navstat = filter_by_navigation_codes(dynamic_container)
     dynamic_cleaned = filter_by_SOG(dynamic_navstat)
 
-    # option to save cleaned dataset
-    # dynamic_cleaned.to_csv("/Users/apple/Desktop/transport/Shipping/datasets/cleaned_dynamic.csv")
+    # generate sample dataset for model creation
+    dynamic_sample = generate_sub_sample(dynamic_cleaned)
 
-    return dynamic_cleaned
+    # option to save cleaned dataset
+    # dynamic_cleaned.to_csv("datasets/cleaned_dynamic.csv")
+
+    return dynamic_sample
