@@ -14,26 +14,27 @@ Databases used in the study include..
 
 A full description of the research and references used can be found in README.md
 
-Things to-do...
+To-do/improvements...
 
     - add comments in
+    - combine monthly oceanic datasets in one
 
 """
 
 
-### Import libraries and data processing files ###
-
+### Import libraries ###
 import sys
 import math
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
+### Import external functions ###
 import AIS_data_cleaning
 import ts_by_month
 import weather_data_cleaning
-import compile_datasets
-
+import oceanic_matching
+import weather_matching
 
 
 def usage_check():
@@ -87,7 +88,6 @@ def load_AIS_data(data_dir):
 
 
 
-
 def load_oceanic_data(data_dir):
     """
     0. Check terminal call usage and load dataset into pandas dataframe using
@@ -121,7 +121,6 @@ def load_oceanic_data(data_dir):
     oc_mar = pd.read_csv(oc_mar_filename).drop(['dpt', 'wlv'], axis=1)
 
     return oc_oct, oc_nov, oc_dec, oc_jan, oc_feb, oc_mar
-
 
 
 
@@ -177,8 +176,16 @@ if __name__ == '__main__':
     # 5. data_merging
     ocean_lat, ocean_lon, ocean_ts = nearest_ocean_station(month_ts_array)
 
+    # 6. Genereate oceanic and weather parameter fields
+    ocean_hs = np.zeros(len(dynamic_sample_full))
+    ocean_dir = np.zeros(len(dynamic_sample_full))
+    ocean_lm = np.zeros(len(dynamic_sample_full))
 
-    # 6. Iterate through AIS dynamic data
+    weather_wind_ID = np.zeros(len(dynamic_sample_full))
+    weather_Ff = np.zeros(len(dynamic_sample_full))
+    weather_P = np.zeros(len(dynamic_sample_full))
+    weather_T = np.zeros(len(dynamic_sample_full))
+
     for dyn_idx in range(len(dynamic_sample_full)):
 
         # get AIS coordintes and timestamp
@@ -186,125 +193,23 @@ if __name__ == '__main__':
         AIS_lon = dynamic_sample_full["lon"].values[dyn_idx]
         AIS_ts  = dynamic_sample_full["t"].values[dyn_idx]
 
+        # obtain closest match of oceanic parameters (hs, dir, lm)
+        ocean_hs_idx, ocean_dir_idx, ocean_lm_idx = ocean_parameter_matching(AIS_lat, AIS_lon, AIS_ts)
 
-        # obtain oceanic parameters at closest point and time
-        try:
-
-            # if in October
-            if AIS_ts > month_ts_array[0] & AIS < month_ts_array[1]:
-
-                # find closest measuring point and time
-                oceanic_lat, oceanic_lon, oceanic_ts = find_nearest_ocean_element(oc_oct, AIS_lat, AIS_lon, AIS_ts)
-
-                # obtain oceanic data from this point and time
-                ocean_lat_df = oc_october_final[oc_october_final["lat"] == ocean_lat]
-                ocean_lon_df = ocean_lat_df[ocean_lat_df["lon"] == ocean_lon]
-                ocean_t_df = ocean_lon_df[ocean_lon_df["ts"] == ocean_ts]
+        # assign to arrays
+        ocean_hs[dyn_idx] = ocean_hs_idx
+        ocean_dir[dyn_idx] = ocean_dir_idx
+        ocean_lm[dyn_idx] = ocean_lm_idx
 
 
-            # if in November
-            elif AIS_ts > month_ts_array[2] & AIS < month_ts_array[3]:
+        # obtain closest match of weather paramters (wind_ID, Ff, P, T)
+        weather_wind_ID_idx, weather_Ff_idx, weather_P_idx, weather_T_idx = weather_parameter_matching(AIS_lat, AIS_lon, AIS_ts)
 
-                # find closest measuring point and time
-                oceanic_lat, oceanic_lon, oceanic_ts = find_nearest_ocean_element(oc_nov, AIS_lat, AIS_lon, AIS_ts)
-
-                # obtain oceanic data from this point and time
-                ocean_lat_df = oc_november_final[oc_october_final["lat"] == ocean_lat]
-                ocean_lon_df = ocean_lat_df[ocean_lat_df["lon"] == ocean_lon]
-                ocean_t_df = ocean_lon_df[ocean_lon_df["ts"] == ocean_ts]
-
-
-            # if in December
-            elif AIS_ts > month_ts_array[4] & AIS < month_ts_array[5]:
-
-                # find closest measuring point and time
-                oceanic_lat, oceanic_lon, oceanic_ts = find_nearest_ocean_element(oc_dec, AIS_lat, AIS_lon, AIS_ts)
-
-                # obtain oceanic data from this point and time
-                ocean_lat_df = oc_december_final[oc_october_final["lat"] == ocean_lat]
-                ocean_lon_df = ocean_lat_df[ocean_lat_df["lon"] == ocean_lon]
-                ocean_t_df = ocean_lon_df[ocean_lon_df["ts"] == ocean_ts]
-
-
-            # if in January
-            elif AIS_ts > month_ts_array[6] & AIS < month_ts_array[7]:
-
-                # find closest measuring point and time
-                oceanic_lat, oceanic_lon, oceanic_ts = find_nearest_ocean_element(oc_jan, AIS_lat, AIS_lon, AIS_ts)
-
-                # obtain oceanic data from this point and time
-                ocean_lat_df = oc_january_final[oc_october_final["lat"] == ocean_lat]
-                ocean_lon_df = ocean_lat_df[ocean_lat_df["lon"] == ocean_lon]
-                ocean_t_df = ocean_lon_df[ocean_lon_df["ts"] == ocean_ts]
-
-
-            # if in February
-            elif AIS_ts > month_ts_array[8] & AIS < month_ts_array[9]:
-
-                # find closest measuring point and time
-                oceanic_lat, oceanic_lon, oceanic_ts = find_nearest_ocean_element(oc_feb, AIS_lat, AIS_lon, AIS_ts)
-
-                # obtain oceanic data from this point and time
-                ocean_lat_df = oc_february_final[oc_october_final["lat"] == ocean_lat]
-                ocean_lon_df = ocean_lat_df[ocean_lat_df["lon"] == ocean_lon]
-                ocean_t_df = ocean_lon_df[ocean_lon_df["ts"] == ocean_ts]
-
-
-            # if in March
-            else:
-
-                # find closest measuring point and time
-                oceanic_lat, oceanic_lon, oceanic_ts = find_nearest_ocean_element(oc_mar, AIS_lat, AIS_lon, AIS_ts)
-
-                # obtain oceanic data from this point and time
-                ocean_lat_df = oc_march_final[oc_october_final["lat"] == ocean_lat]
-                ocean_lon_df = ocean_lat_df[ocean_lat_df["lon"] == ocean_lon]
-                ocean_t_df = ocean_lon_df[ocean_lon_df["ts"] == ocean_ts]
-
-
-            # obtain significant height (hs), mean direction (dir) and mean
-            # wave length (lm) from that data point
-            ocean_hs[row] = ocean_t_df["hs"].values[0]
-            ocean_dir[row] = ocean_t_df["dir"].values[0]
-            ocean_lm[row] = ocean_t_df["lm"].values[0]
-
-
-        # if unknown
-        except:
-
-            ocean_hs[row] = None
-            ocean_dir[row] = None
-            ocean_lm[row] = None
-
-
-        # find closest measuring point and time in historic weather database
-        weather_lat, weather_lon, weather_ts = find_nearest_weather_element(mmsi_lat, mmsi_lon, mmsi_ts)
-
-
-        # obtain weather data from this point and time
-        weather_lat_df = weather_final[weather_final["latitude"] == weather_lat]
-        weather_lon_df = weather_lat_df[weather_lat_df["longitude"] == weather_lon]
-        weather_t_df = weather_lon_df[weather_lon_df["local_time"] == weather_ts]
-
-
-        # obtain wind direction (wind_ID), mean wind speed (Ff), atmospheric
-        # pressure (P) and air temperature at 2 meter elevation from that datapoint
-
-        try:
-
-            weather_wind_ID[row] = weather_t_df["id_windDirection"].values[0]
-            weather_Ff[row] = weather_t_df["Ff"].values[0]
-            weather_P[row]  = weather_t_df["P"].values[0]
-            weather_T[row]  = weather_t_df["T"].values[0]
-
-
-        # account for missing data
-        except:
-
-            weather_wind_ID[row] = None
-            weather_Ff[row] = None
-            weather_P[row]  = None
-            weather_T[row]  = None
+        # assign to arrays
+        weather_wind_ID[dyn_idx] = weather_wind_ID_idx
+        weather_Ff[dyn_idx] = weather_Ff_idx
+        weather_P[dyn_idx] = weather_P_idx
+        weather_T[dyn_idx] = weather_T_idx
 
 
     # Add these additional oceanic variables to dynamic AIS dataset
@@ -312,14 +217,15 @@ if __name__ == '__main__':
     dynamic_sample_full["ocean_dir"] = ocean_dir
     dynamic_sample_full["ocean_lm"] = ocean_lm
 
-
-    # Add these additional weather variables to dynamic AIS dataset
     dynamic_sample_full["weather_wind_ID"] = weather_wind_ID
     dynamic_sample_full["weather_Ff"] = weather_Ff
     dynamic_sample_full["weather_P"] = weather_P
     dynamic_sample_full["weather_T"] = weather_T
 
+
     # clean and give option to save
-    full_dynamic_set =dynamic_sample_full
+    full_dynamic_set = dynamic_sample_full
     full_dynamic_set.drop(["sourcemmsi"], axis=1)
-    # full_dynamic_set.to_csv("datasets/full_dynamic_set.csv")
+
+    # save to local directory
+    full_dynamic_set.to_csv("datasets/full_dynamic_set.csv")

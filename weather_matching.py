@@ -36,33 +36,6 @@ def find_nearest_element(array, value):
     return nearest_element
 
 
-def find_nearest_ocean_element(oc_data_month, AIS_lat, AIS_lon, AIS_ts):
-    """
-    Find elements in dataset of oceanic variables closest to experimental values
-    and return them.
-
-    Input:
-
-            oc_data_month
-            AIS_lat
-            AIS_lon
-            AIS_ts
-
-    Output:
-
-            oceanic_lat
-            oceanic_lon
-            oceanic_ts
-
-    """
-
-    # find nearest elements in oceanic datasets
-    oceanic_lat = find_nearest_element(oc_data_month["lat"].values, AIS_lat)
-    oceanic_lon = find_nearest_element(oc_data_month["lon"].values, AIS_lon)
-    oceanic_ts  = find_nearest_element(oc_data_month["ts"].values, AIS_ts)
-
-    return oceanic_lat, oceanic_lon, oceanic_ts
-
 
 def find_nearest_weather_element(weather_final, AIS_lat, AIS_lon, AIS_ts):
     """
@@ -89,3 +62,39 @@ def find_nearest_weather_element(weather_final, AIS_lat, AIS_lon, AIS_ts):
     weather_ts = find_nearest_element(weather_final["latitude"].values, AIS_ts)
 
     return weather_lat, weather_lon, weather_ts
+
+
+
+
+def weather_parameter_matching(AIS_lat, AIS_lon, AIS_ts, weather_final):
+
+    # obtain closest match of weather parameters (lat, lon)
+    weather_lat, weather_lon, weather_ts = find_nearest_weather_element(weather_final, AIS_lat, AIS_lon, AIS_ts)
+
+
+    # algorithm for getting data assoicated with these points
+    weather_lat_df = weather_final[weather_final["latitude"] == weather_lat]
+    weather_lon_df = weather_lat_df[weather_lat_df["longitude"] == weather_lon]
+    weather_t_df = weather_lon_df[weather_lon_df["local_time"] == weather_ts]
+
+
+    # obtain wind direction (wind_ID), mean wind speed (Ff), atmospheric
+    # pressure (P) and air temperature at 2 meter elevation from that datapoint
+    try:
+
+        weather_wind_ID[row] = weather_t_df["id_windDirection"].values[0]
+        weather_Ff[row] = weather_t_df["Ff"].values[0]
+        weather_P[row]  = weather_t_df["P"].values[0]
+        weather_T[row]  = weather_t_df["T"].values[0]
+
+
+    # account for missing data
+    except:
+
+        weather_wind_ID[row] = None
+        weather_Ff[row] = None
+        weather_P[row]  = None
+        weather_T[row]  = None
+
+
+    return weather_wind_ID, weather_Ff, weather_P, weather_T
