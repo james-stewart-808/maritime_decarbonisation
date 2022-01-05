@@ -58,7 +58,6 @@ def usage_check():
 
 
 
-
 def load_AIS_data(data_dir):
     """
     0. Check terminal call usage and load dataset into pandas dataframe using
